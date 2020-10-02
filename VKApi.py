@@ -72,7 +72,7 @@ class VKApi:
 				d.update(args)
 				return self._vk.call(self._name+'.'+name, d)
 			return call
-	def __init__(self, token, id, is_group = False):
+	def __init__(self, token, id=0, is_group = False):
 		self._vk=vkmain( token, id, is_group )
 	def __getattr__(self, name):
 		if name in main_funcs:

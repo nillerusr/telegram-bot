@@ -74,7 +74,7 @@ def download_file(url, filename, formats=[]):
 	return filename
 
 def load_json(filename):
-	return D(json.loads(open(filename, 'r').text))
+	return D(json.loads(open(filename, 'r').read()))
 
 def args(message):
 	return ' '.join(message.text.split(' ')[1:])
