@@ -1,8 +1,11 @@
 #!/usr/bin/python3
 from PIL import Image
-import VKApi, telebot, os, google
+import VKApi, telebot, os, re, google
 from telebot import types
 from utils import *
+from urllib.parse import quote, unquote
+
+match_wiki = re.compile('<.*?>')
 
 info = load_json('data/info.json')
 
@@ -51,5 +54,19 @@ def send_images(message):
 		except Exception as e: print(e)
 		for i in files: os.remove(i)
 
+@bot.message_handler(commands=['wiki'])
+def wikipedia(message):
+	try:
+		a=requests.post('https://ru.wikipedia.org/w/api.php?action=opensearch&format=json&search=%s'%quote(args(message))).json()[1]
+		w=requests.get('https://ru.wikipedia.org/w/api.php?action=query&redirects&prop=extracts&format=json&exintro=&titles=%s'%quote(a[0])).json()['query']['pages']
+		html=unquote(w[list(w.keys())[0]]['extract'])
+		cleantext = 'Страница: https://ru.wikipedia.org/wiki/%s\n   '%a[0].replace(' ','_')
+		cleantext += re.sub(match_wiki, '', html)
+		if len(a) > 1:
+			cleantext += '\n  Похожие запросы: '+'; '.join(a[1:])
+		bot.reply_to(message, cleantext)
+	except Exception as e:
+		print(e)
+		bot.reply_to(message, "Ничего не найдено!")
 
 bot.infinity_polling()
