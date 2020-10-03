@@ -10,13 +10,17 @@ match_wiki = re.compile('<.*?>')
 info = load_json('data/info.json')
 
 vkaudio = VKApi.VKApi( info.vk.token_audio )
+vkgroup = VKApi.VKApi( info.vk.token_group, is_group = True)
+
 bot = telebot.TeleBot(info.telegram.token)
 
 @bot.message_handler(commands=['help', 'start'])
 def send_welcome(message):
 	bot.reply_to(message, 'Ну здравствуй\nПомощь:\n\n'
 		'/audio - поиск аудио в вк\n'
-		'/g - поиск изображений в гугле')
+		'/g - поиск изображений в гугле\n'
+		'/wiki - поиск статьи на википедии\n'
+		'/gif - поиск гифок в вк')
 
 @bot.message_handler(commands=['audio'])
 def send_audio(message):
@@ -69,4 +73,20 @@ def wikipedia(message):
 		print(e)
 		bot.reply_to(message, "Ничего не найдено!")
 
+@bot.message_handler(commands=['gif'])
+def search_gif(message):
+	count = 0
+	docs=vkgroup.docs.search(q=args(message), count=200).response.items
+	for i in docs:
+		if count >= 5: break
+		if i.ext == 'gif':
+			if (i.size/1024/1024) > 10:
+				continue
+
+			fname = get_random_string(8)+'.mp4'
+			if download_file(i.url, fname):
+				f=open(fname, 'rb')
+				bot.send_animation(message.chat.id, f)
+				count+=1
+				os.remove(fname)
 bot.infinity_polling()
